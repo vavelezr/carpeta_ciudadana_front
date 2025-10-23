@@ -27,6 +27,12 @@ export default function App() {
   const [tResult, setTResult] = useState(null);
   const [opToken, setOpToken] = useState("");
 
+  // ====== Consultar Operadores ======
+  const [operatorsList, setOperatorsList] = useState([]);
+  const [operatorsLoading, setOperatorsLoading] = useState(false);
+  const [operatorsCache, setOperatorsCache] = useState(null);
+  const [operatorsCacheTime, setOperatorsCacheTime] = useState(null);
+
   // ====== Estado simple ======
   const [statusMsg, setStatusMsg] = useState("");
 
@@ -36,10 +42,41 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab]);
 
+  // cargar operadores cuando entro a Consultar Operadores
+  useEffect(() => {
+    if (tab === "operators") loadOperatorsList();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab]);
+
   const loadOperators = async () => {
     const list = await getOperators();
     setOps(list);
     if (list.length && !selectedOp) setSelectedOp(list[0].name);
+  };
+
+  // ----- cargar operadores con cache -----
+  const loadOperatorsList = async () => {
+    const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
+    const now = Date.now();
+    
+    // Verificar cache
+    if (operatorsCache && operatorsCacheTime && (now - operatorsCacheTime) < CACHE_DURATION) {
+      setOperatorsList(operatorsCache);
+      return;
+    }
+
+    setOperatorsLoading(true);
+    try {
+      const list = await getOperators();
+      setOperatorsList(list);
+      setOperatorsCache(list);
+      setOperatorsCacheTime(now);
+    } catch (error) {
+      console.error("Error cargando operadores:", error);
+      setStatusMsg("Error al cargar operadores");
+    } finally {
+      setOperatorsLoading(false);
+    }
   };
 
   // ----- acciones ciudadano -----
@@ -105,6 +142,7 @@ export default function App() {
         <Tab id="auth" label="Registro / Iniciar sesión" />
         <Tab id="me" label="Mi cuenta" />
         <Tab id="transfer" label="Transferir" />
+        <Tab id="operators" label="Consultar Operadores" />
         <Tab id="status" label="Estado" />
       </div>
 
@@ -164,6 +202,46 @@ export default function App() {
           </form>
 
           {tResult && <pre>{JSON.stringify(tResult, null, 2)}</pre>}
+        </section>
+      )}
+
+      {/* ========== CONSULTAR OPERADORES ========== */}
+      {tab === "operators" && (
+        <section>
+          <div className="row">
+            <button type="button" onClick={loadOperatorsList} disabled={operatorsLoading}>
+              {operatorsLoading ? "Cargando..." : "Actualizar Lista"}
+            </button>
+            {operatorsCacheTime && (
+              <span className="muted">
+                Última actualización: {new Date(operatorsCacheTime).toLocaleTimeString()}
+              </span>
+            )}
+          </div>
+
+          {operatorsList.length > 0 ? (
+            <div>
+              <h3>Operadores Disponibles ({operatorsList.length})</h3>
+              <div className="operators-grid">
+                {operatorsList.map((op, index) => (
+                  <div key={op.id || index} className="operator-card">
+                    <h4>{op.name}</h4>
+                    <p><strong>ID:</strong> {op.id}</p>
+                    {op.raw && (
+                      <details>
+                        <summary>Detalles completos</summary>
+                        <pre>{JSON.stringify(op.raw, null, 2)}</pre>
+                      </details>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <p className="muted">
+              {operatorsLoading ? "Cargando operadores..." : "No hay operadores disponibles"}
+            </p>
+          )}
         </section>
       )}
 

@@ -15,3 +15,11 @@ section { margin-top: 12px; }
 .row-buttons { display: flex; gap: 8px; width: 100%; }
 .danger { background: #d9534f; }
 .chk { display: flex; align-items: center; gap: 8px; margin: 8px 0; }
+
+.operators-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px; margin-top: 16px; }
+.operator-card { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+.operator-card h4 { margin: 0 0 8px 0; color: #0b5ed7; font-size: 16px; }
+.operator-card p { margin: 4px 0; font-size: 14px; }
+.operator-card details { margin-top: 12px; }
+.operator-card summary { cursor: pointer; font-weight: bold; color: #666; }
+.operator-card pre { margin-top: 8px; font-size: 11px; max-height: 200px; overflow-y: auto; }
